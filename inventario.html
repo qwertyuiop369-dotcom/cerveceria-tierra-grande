@@ -488,9 +488,13 @@ function botellasPublicasLote(raw){
 /** Normaliza un registro de inventario o de lotes-bitacora a un item de stock */
 function normalizarItem(raw, key, fuente){
   if(!raw) return null;
-  const stock = num(raw.botellasStock != null ? raw.botellasStock : raw.stock);
+  const stockCrudo = num(raw.botellasStock != null ? raw.botellasStock : raw.stock);
   const reservadas = num(raw.botellasReservadas != null ? raw.botellasReservadas : raw.reservadas);
   const vendidas = num(raw.botellasVendidas != null ? raw.botellasVendidas : raw.vendidas);
+  // Stock final: si ya hay un valor explícito guardado (movimientos hechos desde
+  // esta página), se respeta. Si no (lote recién calculado automáticamente desde
+  // la bitácora, sin registro propio todavía), se usa botellasPublicasLote.
+  const stock = stockCrudo || (fuente === 'lotes' ? botellasPublicasLote(raw) : 0);
   const total = num(raw.botellasTotal != null ? raw.botellasTotal : raw.botellas) || (stock + reservadas + vendidas);
 
   // Si viene de lotes-bitacora y no está en inventario todavía, solo se
@@ -517,7 +521,7 @@ function normalizarItem(raw, key, fuente){
     id: raw.id || key,
     recetaId: raw.recetaId || null,
     nombre: nombreEstilo(raw),
-    botellasStock: stock || (fuente === 'lotes' ? botellasPublicasLote(raw) : 0),
+    botellasStock: stock,
     botellasReservadas: reservadas,
     botellasVendidas: vendidas,
     botellasTotal: total || stock + reservadas + vendidas,
