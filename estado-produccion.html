@@ -207,6 +207,22 @@ function nombreReceta(recetaId, fallback){
   return fallback || '—';
 }
 
+// Cantidad a mostrar públicamente: si el lote tiene botellasCliente
+// capturado (las que realmente se venden a Locundus), se usa eso en lugar
+// del total de botellas del lote — el resto puede ser consumo propio u
+// otra venta, y no debe aparecer en esta página pública.
+function botellasPublicas(lote){
+  if(lote.botellasCliente !== undefined && lote.botellasCliente !== null && lote.botellasCliente !== ''){
+    const n = Number(lote.botellasCliente);
+    if(!isNaN(n)) return n;
+  }
+  if(lote.botellasFinales !== undefined && lote.botellasFinales !== null && lote.botellasFinales !== ''){
+    const n = Number(lote.botellasFinales);
+    if(!isNaN(n)) return n;
+  }
+  return lote.botellas != null ? lote.botellas : null;
+}
+
 // Etapas que usa la bit\u00e1cora (campo `etapa` de cada lote en index.html).
 // Este es el campo que realmente se actualiza al mover un lote de fase.
 function etapaInfo(key){
@@ -292,7 +308,7 @@ function cardLoteProduccion(lote){
       <span class="badge ${info.cls}">${info.label}</span>
       <div class="detail-row">
         <span class="lbl">Cantidad en elaboración</span>
-        <span class="val">${cantidadTxt(lote.botellas)}</span>
+        <span class="val">${cantidadTxt(botellasPublicas(lote))}</span>
       </div>
       <div class="detail-row">
         <span class="lbl">Elaboración iniciada</span>
@@ -320,7 +336,7 @@ function cardCarbonatando(lote){
   const receta = lote.recetaId && RECETAS[lote.recetaId] ? RECETAS[lote.recetaId] : null;
   const diasCarb = (receta && receta.carbonatacionDias) || 14;
   const listoAprox = addDays(inicioCarb, diasCarb);
-  const botellas = lote.botellas != null ? lote.botellas : (lote.cantidad != null ? lote.cantidad : null);
+  const botellas = botellasPublicas(lote);
 
   return `
     <div class="card">
