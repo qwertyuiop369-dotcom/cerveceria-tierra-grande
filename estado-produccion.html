@@ -160,7 +160,7 @@ const RECETAS = {
   'r-stout':        { nombre:'Coffee Stout',                    fermentandoDays:8, fermenterDays:12, tiempoTotalDias:32, carbonatacionDias:14 },
   'r-belgian':      { nombre:'Belgian Blonde Albahaca-Romero',  fermentandoDays:7, fermenterDays:11, tiempoTotalDias:24, carbonatacionDias:12 },
   'r-honey-wheat':  { nombre:'Honey Wheat',                    fermentandoDays:7, fermenterDays:11, tiempoTotalDias:24, carbonatacionDias:12 },
-  'r-dry-stout':    { nombre:'Dry Stout',                      fermentandoDays:7, fermenterDays:11, tiempoTotalDias:24, carbonatacionDias:14 },
+  'r-dry-stout-bonafont': { nombre:'Dry Stout',                fermentandoDays:7, fermenterDays:11, tiempoTotalDias:24, carbonatacionDias:14 },
 };
 
 function parseFecha(val){
@@ -207,11 +207,17 @@ function nombreReceta(recetaId, fallback){
   return fallback || '—';
 }
 
-function esCarbonatando(estado){
-  if(!estado) return false;
-  const s = String(estado).toLowerCase().trim()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  return s.includes('carbonat') || s === 'condicionando' || s === 'bottle conditioning';
+// Etapas que usa la bit\u00e1cora (campo `etapa` de cada lote en index.html).
+// Este es el campo que realmente se actualiza al mover un lote de fase.
+function etapaInfo(key){
+  const map = {
+    elaboracion: {label:'D\u00eda de elaboraci\u00f3n', cls:'fermentando'},
+    fermentando: {label:'Fermentando',        cls:'fermentando'},
+    reposo:      {label:'En reposo',          cls:'reposo'},
+    carbonatando:{label:'Carbonatando',       cls:'carbonatando'},
+    listo:       {label:'Listo',              cls:'listo'},
+  };
+  return map[key] || null;
 }
 
 function cantidadTxt(botellas){
@@ -269,6 +275,41 @@ function cardFermentador(f){
   `;
 }
 
+// Tarjeta principal: se basa en el lote de la bitácora y su campo `etapa`
+// (elaboración/fermentando/reposo), que es lo que se actualiza desde el
+// panel al mover un lote de fase.
+function cardLoteProduccion(lote){
+  const nombre = nombreReceta(lote.recetaId, lote.estilo || lote.nombre);
+  const dias = daysBetween(lote.fecha);
+  const info = etapaInfo(lote.etapa) || {label:'En producción', cls:'fermentando'};
+  const receta = lote.recetaId && RECETAS[lote.recetaId] ? RECETAS[lote.recetaId] : null;
+  const fechaEntrega = receta ? addDays(lote.fecha, receta.tiempoTotalDias) : null;
+
+  return `
+    <div class="card">
+      <div class="receta">${nombre}</div>
+      ${lote.id ? `<div class="lote-id">Lote ${lote.id}</div>` : ''}
+      <span class="badge ${info.cls}">${info.label}</span>
+      <div class="detail-row">
+        <span class="lbl">Cantidad en elaboración</span>
+        <span class="val">${cantidadTxt(lote.botellas)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="lbl">Elaboración iniciada</span>
+        <span class="val">${fmtDate(lote.fecha)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="lbl">Días de proceso</span>
+        <span class="val">${dias} día${dias === 1 ? '' : 's'}</span>
+      </div>
+      ${fechaEntrega ? `<div class="detail-row">
+        <span class="lbl">Fecha estimada de entrega</span>
+        <span class="val">${fmtDate(fechaEntrega)}</span>
+      </div>` : ''}
+    </div>
+  `;
+}
+
 function cardCarbonatando(lote){
   const nombre = nombreReceta(lote.recetaId, lote.estilo || lote.nombre);
   const inicioCarb =
@@ -309,19 +350,30 @@ function cardCarbonatando(lote){
 function renderAll(fermentadores, lotes){
   const content = document.getElementById('content');
 
-  const ocupados = toList(fermentadores).filter(f => f && f.estado === 'ocupado' && f.recetaId);
-  const carbonatando = toList(lotes).filter(l => l && esCarbonatando(l.estado || l.status || l.fase));
+  const listaLotes = toList(lotes);
+  const enProduccion = listaLotes.filter(l => l && ['elaboracion','fermentando','reposo'].includes(l.etapa));
+  const carbonatando = listaLotes.filter(l => l && l.etapa === 'carbonatando');
 
-  if(ocupados.length === 0 && carbonatando.length === 0){
+  // Respaldo: fermentadores marcados "ocupado" que no tienen un lote propio
+  // en la bitácora (por ejemplo si se asignaron desde la pestaña
+  // Fermentadores sin pasar por "Registrar cocimiento"). Evita duplicar
+  // tarjetas cuando el lote y el fermentador ya cuentan la misma historia.
+  const fermentadorIdsCubiertos = new Set(listaLotes.map(l => l && l.fermentadorId).filter(x => x != null));
+  const ocupadosSinLote = toList(fermentadores).filter(f => f && f.estado === 'ocupado' && f.recetaId && !fermentadorIdsCubiertos.has(f.id));
+
+  const totalProduccion = enProduccion.length + ocupadosSinLote.length;
+
+  if(totalProduccion === 0 && carbonatando.length === 0){
     content.innerHTML = '<div class="empty">No hay lotes en producción ni en carbonatación en este momento.<br>El siguiente lote se anunciará aquí en cuanto arranque.</div>';
     return;
   }
 
   let html = '';
 
-  if(ocupados.length){
-    html += `<div class="section-title">En fermentador (${ocupados.length})</div>`;
-    html += ocupados.map(cardFermentador).join('');
+  if(totalProduccion){
+    html += `<div class="section-title">En producción (${totalProduccion})</div>`;
+    html += enProduccion.map(cardLoteProduccion).join('');
+    html += ocupadosSinLote.map(cardFermentador).join('');
   }
 
   if(carbonatando.length){
