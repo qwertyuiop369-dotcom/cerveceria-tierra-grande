@@ -182,6 +182,31 @@ header p {
   color: var(--muted);
   margin-top: 2px;
 }
+
+.btn-pdf {
+  margin-top: 8px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--copper);
+  background: transparent;
+  color: var(--copper-light);
+  cursor: pointer;
+}
+
+.btn-pdf:hover {
+  background: var(--copper);
+  color: #111;
+}
+
+.btn-pdf:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 </style>
 </head>
 <body>
@@ -202,6 +227,7 @@ header p {
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyA949Wrf0ErPiWYhGUx5Pk25M21dQZ7Dgs",
@@ -247,7 +273,13 @@ async function load() {
   }
 }
 
+let CLIENTE_CACHE = 'Cliente';
+let ENTREGAS_CACHE = [];
+
 function render(cliente, entregas) {
+  CLIENTE_CACHE = cliente;
+  ENTREGAS_CACHE = entregas;
+
   const totalBotellas = entregas.reduce((s, e) => s + (e.botellas || 0), 0);
   const pendientes = entregas.filter(e => !e.pagado);
   const totalPendiente = pendientes.reduce((s, e) => s + (e.precio || 0), 0);
@@ -256,7 +288,7 @@ function render(cliente, entregas) {
   if (entregas.length === 0) {
     pedidosHtml = `<div class="empty">Aún no hay pedidos registrados.</div>`;
   } else {
-    pedidosHtml = entregas.map(e => `
+    pedidosHtml = entregas.map((e, idx) => `
       <div class="pedido">
         <div class="pedido-top">
           <div>
@@ -268,6 +300,7 @@ function render(cliente, entregas) {
           </span>
         </div>
         <div class="detalle">${e.botellas || 0} botellas · ${fmtMoney(e.precio || 0)}</div>
+        <button class="btn-pdf" data-recibo="${idx}">Descargar recibo (PDF)</button>
       </div>
     `).join('');
   }
@@ -294,6 +327,81 @@ function render(cliente, entregas) {
       ${pedidosHtml}
     </div>
   `;
+
+  document.querySelectorAll('[data-recibo]').forEach(btn => {
+    btn.addEventListener('click', () => descargarRecibo(Number(btn.dataset.recibo)));
+  });
+}
+
+function folioPedido(idx, e) {
+  const fechaCompacta = (e.fecha || '').replace(/-/g, '');
+  return `LOC-${fechaCompacta || '000000'}-${String(idx + 1).padStart(3, '0')}`;
+}
+
+function descargarRecibo(idx) {
+  const e = ENTREGAS_CACHE[idx];
+  if (!e) return;
+
+  if (!window.jspdf) {
+    alert('No se pudo cargar el generador de PDF. Revisa tu conexión e intenta de nuevo.');
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a5' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const marginX = 15;
+  let y = 20;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(255, 98, 0);
+  doc.text('Cervecería Tierra Grande', pageWidth / 2, y, { align: 'center' });
+
+  y += 7;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(90, 90, 90);
+  doc.text('Recibo de entrega', pageWidth / 2, y, { align: 'center' });
+
+  y += 8;
+  doc.setDrawColor(200, 200, 200);
+  doc.line(marginX, y, pageWidth - marginX, y);
+
+  y += 9;
+  doc.setTextColor(20, 20, 20);
+  doc.setFontSize(11);
+
+  const fila = (label, valor) => {
+    doc.setFont('helvetica', 'bold');
+    doc.text(label, marginX, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(String(valor), marginX + 35, y);
+    y += 8;
+  };
+
+  fila('Folio:', folioPedido(idx, e));
+  fila('Cliente:', CLIENTE_CACHE || 'Cliente');
+  fila('Fecha:', fmtDate(e.fecha));
+  fila('Producto:', e.sabor || '—');
+  fila('Botellas:', e.botellas || 0);
+  fila('Total:', fmtMoney(e.precio || 0));
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(e.pagado ? 62 : 230, e.pagado ? 207 : 57, e.pagado ? 74 : 43);
+  doc.text(e.pagado ? 'PAGADO' : 'PENDIENTE DE PAGO', marginX, y);
+
+  y += 14;
+  doc.setDrawColor(200, 200, 200);
+  doc.line(marginX, y, pageWidth - marginX, y);
+
+  y += 10;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(120, 120, 120);
+  doc.text('Gracias por tu preferencia — Cervecería Tierra Grande', pageWidth / 2, y, { align: 'center', maxWidth: pageWidth - marginX * 2 });
+
+  doc.save(`recibo-${folioPedido(idx, e)}.pdf`);
 }
 
 load();
