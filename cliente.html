@@ -253,17 +253,57 @@ function fmtDate(iso) {
   return `${d}/${m}/${y}`;
 }
 
+// ===== Cronograma de elaboración (inicio / envasado / entrega) =====
+const RECETAS = {
+  'r-stout':              { nombre: 'Coffee Stout',                   tiempoTotalDias: 32 },
+  'r-belgian':            { nombre: 'Belgian Blonde Albahaca-Romero', tiempoTotalDias: 24 },
+  'r-honey-wheat':        { nombre: 'Honey Wheat',                    tiempoTotalDias: 24 },
+  'r-dry-stout-bonafont': { nombre: 'Dry Stout',                      tiempoTotalDias: 24 },
+};
+
+function parseFecha(val) {
+  if (!val) return null;
+  if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}/.test(val)) {
+    const d = new Date(val.slice(0, 10) + 'T00:00:00');
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function addDays(val, days) {
+  const d = parseFecha(val);
+  if (!d || days == null) return null;
+  const out = new Date(d.getTime());
+  out.setDate(out.getDate() + days);
+  return out;
+}
+
+function fmtDateLarga(val) {
+  const d = val instanceof Date ? val : parseFecha(val);
+  if (!d || isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function nombreRecetaLote(lote) {
+  if (lote.recetaId && RECETAS[lote.recetaId]) return RECETAS[lote.recetaId].nombre;
+  return lote.nombreReceta || lote.estilo || lote.nombre || 'Lote';
+}
+
 async function load() {
   try {
-    const [snapEntregas, snapCliente] = await Promise.all([
+    const [snapEntregas, snapCliente, snapLotes] = await Promise.all([
       db.ref('bitacora/entregas').once('value'),
-      db.ref('bitacora/entregas-cliente').once('value')
+      db.ref('bitacora/entregas-cliente').once('value'),
+      db.ref('bitacora/lotes-bitacora').once('value')
     ]);
 
     const entregas = snapEntregas.val() || [];
     const cliente = snapCliente.val() || 'Cliente';
+    const lotesRaw = snapLotes.val() || [];
+    const lotes = Array.isArray(lotesRaw) ? lotesRaw : Object.values(lotesRaw);
 
-    render(cliente, Array.isArray(entregas) ? entregas : []);
+    render(cliente, Array.isArray(entregas) ? entregas : [], lotes.filter(Boolean));
   } catch (e) {
     console.error(e);
     document.getElementById('content').innerHTML = `
@@ -276,7 +316,62 @@ async function load() {
 let CLIENTE_CACHE = 'Cliente';
 let ENTREGAS_CACHE = [];
 
-function render(cliente, entregas) {
+// Para cada lote destinado a este cliente, intenta encontrar la entrega real
+// ya registrada (mismo sabor, fecha igual o posterior al envasado) y que no
+// haya sido usada ya por otro lote más antiguo — si no hay match, se estima.
+function buscarEntregaReal(lote, entregas, usadas) {
+  const nombre = nombreRecetaLote(lote);
+  const desde = lote.fechaEmbotellado || lote.fecha;
+  let mejor = null;
+  entregas.forEach((e, i) => {
+    if (usadas.has(i)) return;
+    if ((e.sabor || '') !== nombre) return;
+    if (desde && e.fecha && e.fecha < desde) return;
+    if (!mejor || (e.fecha || '') < (entregas[mejor].fecha || '')) mejor = i;
+  });
+  if (mejor != null) { usadas.add(mejor); return entregas[mejor]; }
+  return null;
+}
+
+function cronogramaHtml(lotes, entregas) {
+  const relevantes = lotes.filter(l => l.botellasCliente !== undefined && l.botellasCliente !== null && l.botellasCliente !== '');
+  if (relevantes.length === 0) return '';
+
+  relevantes.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+  const usadas = new Set();
+
+  const items = relevantes.map(lote => {
+    const receta = RECETAS[lote.recetaId];
+    const nombre = nombreRecetaLote(lote);
+    const inicio = lote.fecha;
+    const envasado = lote.fechaEmbotellado || null;
+    const entregaReal = buscarEntregaReal(lote, entregas, usadas);
+    const entregaEstimada = !entregaReal && receta ? addDays(lote.fecha, receta.tiempoTotalDias) : null;
+
+    return `
+      <div class="pedido">
+        <div class="pedido-top">
+          <div class="sabor">${nombre}</div>
+        </div>
+        <div class="detalle">
+          <div>Inicio: ${fmtDateLarga(inicio)}</div>
+          <div>Envasado: ${envasado ? fmtDateLarga(envasado) : 'Pendiente'}</div>
+          <div>Entrega: ${entregaReal ? fmtDateLarga(entregaReal.fecha) + ' (confirmada)' : (entregaEstimada ? fmtDateLarga(entregaEstimada) + ' (estimada)' : 'Por definir')}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="card">
+      <h2>Cronograma de elaboración</h2>
+      <p class="muted" style="margin-bottom:10px;">Fechas de inicio, envasado y entrega de tus lotes. Las de envasado y entrega pueden ajustarse mientras el lote sigue en proceso.</p>
+      ${items}
+    </div>
+  `;
+}
+
+function render(cliente, entregas, lotes) {
   CLIENTE_CACHE = cliente;
   ENTREGAS_CACHE = entregas;
 
@@ -326,6 +421,8 @@ function render(cliente, entregas) {
       <h2>Tus pedidos</h2>
       ${pedidosHtml}
     </div>
+
+    ${cronogramaHtml(lotes, entregas)}
   `;
 
   document.querySelectorAll('[data-recibo]').forEach(btn => {
