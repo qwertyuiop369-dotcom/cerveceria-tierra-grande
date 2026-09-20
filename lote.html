@@ -318,18 +318,34 @@ const RECETAS = {
       {id:'cold-brew',cantidad:450},{id:'azucar',cantidad:20},
     ]
   },
+  'r-coffee-stout-viking': {
+    nombre: 'Coffee Stout Viking',
+    abvEstimado: '5.0–5.5%',
+    ibu: '32–38',
+    tempServicio: '8–12 °C',
+    maridaje: 'Postres de chocolate, quesos maduros, carne asada.',
+    descripcion: 'Cerveza artesanal de cuerpo medio-alto, elaborada con malta Pale Ale, Roasted Barley y las maltas especiales Viking Malt (Coffee Malt, Caramel Malt y Red Malt). Su perfil tostado y de chocolate se enriquece con cold brew de café añadido al final de la fermentación, aportando aroma fresco a café sin amargor excesivo. Equilibrada con lúpulo Northern Brewer y levadura S-33.',
+    ingredientes: [
+      {id:'pale-ale',cantidad:3600},{id:'roasted-barley',cantidad:470},
+      {id:'viking-coffee-malt',cantidad:430},{id:'viking-caramel-malt',cantidad:320},
+      {id:'viking-caramel-malt-50',cantidad:150},{id:'viking-red-malt',cantidad:100},
+      {id:'northern-brewer',cantidad:44},{id:'s-33',cantidad:4},
+      {id:'cold-brew',cantidad:1600},{id:'azucar',cantidad:73},
+    ]
+  },
   'r-belgian': {
     nombre: 'Belgian Blonde Albahaca-Romero',
-    abvEstimado: '5.2–5.6%',
+    abvEstimado: '6.6–6.9%',
     ibu: '22–28',
     tempServicio: '6–10 °C',
     maridaje: 'Ensaladas frescas, pollo a las hierbas, quesos suaves.',
-    descripcion: 'Cerveza artesanal de carácter único, elaborada con una suave base de malta Pale Ale y trigo, enriquecida con avena para una textura sedosa. Su perfil aromático incorpora sutiles notas a miel y caramelo, equilibradas a la perfección con infusiones frescas de albahaca y romero que aportan un toque herbal, fresco y refrescante.',
+    descripcion: 'Cerveza artesanal de carácter único, elaborada con una suave base de malta Pale Ale y trigo, con maltas especiales Viking Malt (Red Malt, Caramel Malt 50), enriquecida con avena para una textura sedosa. Su perfil aromático incorpora sutiles notas a caramelo, equilibradas a la perfección con infusiones frescas de albahaca y romero que aportan un toque herbal, fresco y refrescante. Azúcar de caña/Candi Sugar Clear al hervor sube el ABV a rango de estilo belga sin más cuerpo.',
     ingredientes: [
-      {id:'pale-ale',cantidad:900},{id:'wheat',cantidad:200},{id:'aromatic',cantidad:100},
-      {id:'honey-malt',cantidad:80},{id:'crystal-10',cantidad:50},{id:'avena',cantidad:50},
+      {id:'pale-ale',cantidad:900},{id:'wheat',cantidad:200},{id:'viking-red-malt',cantidad:100},
+      {id:'viking-caramel-malt-50',cantidad:50},{id:'avena',cantidad:50},
       {id:'northern-brewer',cantidad:9},{id:'albahaca',cantidad:10},{id:'romero',cantidad:4},
-      {id:'s-33',cantidad:1},{id:'azucar',cantidad:23},
+      {id:'s-33',cantidad:1},{id:'azucar-candi',cantidad:250},
+      {id:'cloruro-calcio',cantidad:3},{id:'yeso',cantidad:1.5},{id:'azucar',cantidad:23},
     ]
   },
   'r-honey-wheat': {
@@ -338,24 +354,25 @@ const RECETAS = {
     ibu: '15–18',
     tempServicio: '4–8 °C',
     maridaje: 'Ensaladas, mariscos ligeros, quesos frescos, tardes cálidas.',
-    descripcion: 'Cerveza de trigo ligera y refrescante, elaborada con malta Pale Ale, trigo, Honey malt y avena. La miel se incorpora al final del hervido para conservar su aroma delicado, dando un perfil suave, ligeramente dulce y muy bebible. Ideal para días cálidos, con carbonatación media-alta y un toque frutal sutil de la levadura S-33.',
+    descripcion: 'Cerveza de trigo ligera y refrescante, elaborada con malta Pale Ale, trigo, Honey malt, avena y Viking Caramel Malt 50 (equiv. Crystal 10). La miel se incorpora al final del hervido para conservar su aroma delicado, dando un perfil suave, ligeramente dulce y muy bebible. Ideal para días cálidos, con carbonatación media-alta y un toque frutal sutil de la levadura S-33.',
     ingredientes: [
       {id:'pale-ale',cantidad:700},{id:'wheat',cantidad:500},{id:'honey-malt',cantidad:80},
-      {id:'avena',cantidad:50},{id:'crystal-10',cantidad:30},{id:'northern-brewer',cantidad:6},
+      {id:'avena',cantidad:50},{id:'viking-caramel-malt-50',cantidad:30},{id:'northern-brewer',cantidad:6},
       {id:'miel',cantidad:175},{id:'s-33',cantidad:1},{id:'azucar',cantidad:23},
     ]
   },
-  'r-dry-stout': {
+  'r-dry-stout-bonafont': {
     nombre: 'Dry Stout',
     abvEstimado: '4.2–4.6%',
     ibu: '30–36',
     tempServicio: '8–12 °C',
     maridaje: 'Ostras, carnes a la parrilla, chocolate amargo, pub food.',
-    descripcion: 'Stout seca estilo irlandés, elaborada con malta Pale Ale, Roasted Barley, Light Chocolate, Crystal y avena. Ofrece un carácter tostado limpio y seco, con amargor equilibrado del lúpulo Northern Brewer. Cuerpo medio-bajo, final seco y refrescante, perfecta para quien busca una stout clásica sin excesiva dulzura.',
+    descripcion: 'Stout seca estilo irlandés, ajustada para agua embotellada Bonafont con sales de agua. Elaborada con malta Pale Ale, Roasted Barley y las maltas especiales Viking Malt (Coffee Malt, Caramel Malt) y avena. Ofrece un carácter tostado limpio y seco, con amargor equilibrado del lúpulo Northern Brewer. Cuerpo medio-bajo, final seco y refrescante, perfecta para quien busca una stout clásica sin excesiva dulzura.',
     ingredientes: [
-      {id:'pale-ale',cantidad:950},{id:'roasted-barley',cantidad:120},{id:'light-chocolate',cantidad:60},
-      {id:'crystal',cantidad:50},{id:'avena',cantidad:40},{id:'northern-brewer',cantidad:12},
+      {id:'pale-ale',cantidad:950},{id:'roasted-barley',cantidad:130},{id:'viking-coffee-malt',cantidad:60},
+      {id:'viking-caramel-malt',cantidad:50},{id:'avena',cantidad:40},{id:'northern-brewer',cantidad:12},
       {id:'s-33',cantidad:1},{id:'azucar',cantidad:19},
+      {id:'cloruro-calcio',cantidad:2},{id:'yeso',cantidad:1.5},{id:'bicarbonato',cantidad:1.5},
     ]
   },
 };
@@ -377,6 +394,14 @@ const CATALOGO = {
   'cold-brew':{nombre:'Cold brew de café', unidad:' ml'},
   'albahaca':{nombre:'Albahaca fresca', unidad:' g'},
   'romero':{nombre:'Romero fresco', unidad:' g'},
+  'viking-coffee-malt':{nombre:'Viking Coffee Malt', gluten:'cebada', unidad:' g'},
+  'viking-caramel-malt':{nombre:'Viking Caramel Malt 100', gluten:'cebada', unidad:' g'},
+  'viking-caramel-malt-50':{nombre:'Viking Caramel Malt 50', gluten:'cebada', unidad:' g'},
+  'viking-red-malt':{nombre:'Viking Red Malt', gluten:'cebada', unidad:' g'},
+  'azucar-candi':{nombre:'Azúcar caña blanca / Candi Sugar Clear', unidad:' g'},
+  'cloruro-calcio':{nombre:'Cloruro de calcio (CaCl2)', unidad:' g'},
+  'yeso':{nombre:'Sulfato de calcio (yeso)', unidad:' g'},
+  'bicarbonato':{nombre:'Bicarbonato de sodio', unidad:' g'},
 };
 
 const ESTADOS = {
