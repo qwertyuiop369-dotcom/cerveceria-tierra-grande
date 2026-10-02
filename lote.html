@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cerveza Locundus — Información del lote</title>
-<meta property="og:title" content="Cerveza Locundus — Información del lote">
-<meta property="og:description" content="Trazabilidad del lote · Cerveza artesanal Locundus por Tierra Grande">
+<title>Información del lote</title>
+<meta property="og:title" content="Información del lote">
+<meta property="og:description" content="Trazabilidad del lote · Cerveza artesanal Tierra Grande">
 <meta name="theme-color" content="#FF6200">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -274,14 +274,14 @@ header p { color: var(--muted); font-size: 0.88em; letter-spacing: 1px; }
 <body>
 <div class="wrap">
   <header>
-    <div class="brand">Tierra Grande · Nano Brewery</div>
-    <h1>🍺 Cerveza Locundus</h1>
+    <div class="brand" id="headerBrand">Tierra Grande · Nano Brewery</div>
+    <h1 id="headerTitle">🍺 Cerveza Locundus</h1>
     <p>Información del lote</p>
   </header>
 
   <div id="content"><div class="loading">Cargando información…</div></div>
 
-  <div class="footer">
+  <div class="footer" id="footerBrand">
     Elaborado para Locundus por Tierra Grande · Chiconcuac, Edo. Méx.<br>
     <a href="tel:+524731746210">+52 473 174 6210</a>
     <br><span id="lastMod"></span>
@@ -459,6 +459,49 @@ function getParam(name){
   return new URLSearchParams(window.location.search).get(name);
 }
 
+// Branding: por defecto las etiquetas de Locundus siguen funcionando sin cambios
+// (sin parámetro "marca"). Las botellas de marca propia usan ?marca=propia en el QR.
+const ES_MARCA_PROPIA = getParam('marca') === 'propia';
+
+const BRANDING = {
+  locundus: {
+    headerBrand: 'Tierra Grande · Nano Brewery',
+    headerTitle: '🍺 Cerveza Locundus',
+    footerHtml: 'Elaborado para Locundus por Tierra Grande · Chiconcuac, Edo. Méx.<br>' +
+      '<a href="tel:+524731746210">+52 473 174 6210</a>',
+    shareSuffix: 'Cerveza Locundus',
+    titleSuffix: 'Locundus',
+    catalogText: 'Ver otras cervezas · WhatsApp',
+    catalogMsg: 'Hola, me interesa conocer más cervezas de Locundus',
+    catalogPhone: '524731746210',
+  },
+  propia: {
+    headerBrand: 'Nano Brewery',
+    headerTitle: '🍺 Cervecería Tierra Grande',
+    footerHtml: 'Elaborado por Cervecería Tierra Grande · Chiconcuac, Edo. Méx.<br>' +
+      '<a href="tel:+524731746210">+52 473 174 6210</a>',
+    shareSuffix: 'Cervecería Tierra Grande',
+    titleSuffix: 'Tierra Grande',
+    catalogText: 'Ver otras cervezas · WhatsApp',
+    catalogMsg: 'Hola, me interesa conocer más cervezas de Tierra Grande',
+    catalogPhone: '524731746210',
+  },
+};
+
+const MARCA = ES_MARCA_PROPIA ? BRANDING.propia : BRANDING.locundus;
+
+(function aplicarBranding(){
+  const brandEl = document.getElementById('headerBrand');
+  const titleEl = document.getElementById('headerTitle');
+  const footerEl = document.getElementById('footerBrand');
+  if (brandEl) brandEl.textContent = MARCA.headerBrand;
+  if (titleEl) titleEl.textContent = MARCA.headerTitle;
+  if (footerEl) {
+    footerEl.innerHTML = MARCA.footerHtml + '<br><span id="lastMod"></span>';
+    document.getElementById('lastMod').textContent = 'Última modificación: ' + document.lastModified;
+  }
+})();
+
 function normalizarEstado(raw){
   if(!raw) return null;
   const key = String(raw).toLowerCase().trim()
@@ -551,7 +594,7 @@ function render(lote){
     : '';
 
   const shareUrl = window.location.href;
-  const shareText = encodeURIComponent(`${nombreCerveza} — Lote ${lote.id || ''} · Cerveza Locundus`);
+  const shareText = encodeURIComponent(`${nombreCerveza} — Lote ${lote.id || ''} · ${MARCA.shareSuffix}`);
   const waUrl = `https://wa.me/?text=${shareText}%20${encodeURIComponent(shareUrl)}`;
 
   content.innerHTML = `
@@ -594,7 +637,7 @@ function render(lote){
       </div>
     </div>
 
-    <a class="catalog-link" href="https://wa.me/524731746210?text=${encodeURIComponent('Hola, me interesa conocer más cervezas de Locundus')}">Ver otras cervezas · WhatsApp</a>
+    <a class="catalog-link" href="https://wa.me/${MARCA.catalogPhone}?text=${encodeURIComponent(MARCA.catalogMsg)}">${MARCA.catalogText}</a>
 
     <div class="card" style="margin-top:12px">
       <p class="legal">
@@ -605,7 +648,7 @@ function render(lote){
   `;
 
   // Actualizar título / OG para compartir
-  document.title = `${nombreCerveza} · Lote ${lote.id || ''} — Locundus`;
+  document.title = `${nombreCerveza} · Lote ${lote.id || ''} — ${MARCA.titleSuffix}`;
   const ogTitle = document.querySelector('meta[property="og:title"]');
   if (ogTitle) ogTitle.setAttribute('content', document.title);
 
