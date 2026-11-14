@@ -324,7 +324,7 @@ const RECETAS = {
     ibu: '28–32',
     tempServicio: '8–12 °C',
     maridaje: 'Postres de chocolate, quesos maduros, carne asada.',
-    descripcion: 'Cerveza artesanal de cuerpo medio-alto, elaborada con malta Pale Ale/Maris Otter, Viking Coffee Malt, Viking Caramel Malt 100 y Roasted Barley, con avena para textura sedosa. Su perfil tostado y de chocolate se enriquece con cold brew de café añadido al final de la fermentación, aportando aroma fresco a café sin amargor excesivo. Equilibrada con lúpulo de amargor y aroma, y levadura Safale S-04.',
+    descripcion: 'Stout artesanal oscura y envolvente, elaborada con café. Aromas intensos a café recién hecho y cacao amargo, un cuerpo suave y sedoso gracias a la avena, y un final seco y limpio con un toque de caramelo tostado. El cold brew de café, añadido al final de la fermentación, aporta aroma fresco sin amargor excesivo. Profunda y equilibrada: perfecta con postres de chocolate, carnes a la parrilla o para disfrutar sola en una noche fría.',
     ingredientes: [
       {id:'pale-ale',cantidad:3500},{id:'viking-coffee-malt',cantidad:374},
       {id:'viking-caramel-malt',cantidad:313},{id:'roasted-barley',cantidad:233},{id:'avena',cantidad:247},
@@ -333,13 +333,26 @@ const RECETAS = {
       {id:'yeso',cantidad:2.5},{id:'sal-epsom',cantidad:1.7},{id:'azucar',cantidad:115},
     ]
   },
+  'r-dry-stout-irlandesa': {
+    nombre: 'Dry Stout Irlandesa',
+    abvEstimado: '4.1–4.3%',
+    ibu: '35–40',
+    tempServicio: '8–12 °C',
+    maridaje: 'Ostras, carnes a la parrilla, chocolate amargo, pub food.',
+    descripcion: 'Stout irlandesa clásica: oscura, seca y cremosa. Notas intensas a café tostado se despliegan sobre un cuerpo suave y sedoso, gracias a la cebada en hojuelas. Amargor firme y bien integrado que cierra en un final limpio y seco. Ligera en alcohol y muy fácil de beber, perfecta con carnes a la parrilla, chocolate amargo o para disfrutar sola en una tarde fría.',
+    ingredientes: [
+      {id:'pale-ale',cantidad:2700},{id:'flaked-barley',cantidad:750},{id:'roasted-barley',cantidad:400},
+      {id:'us-golding',cantidad:38},{id:'fermoale-ay3',cantidad:1},{id:'azucar',cantidad:80},
+      {id:'cloruro-calcio',cantidad:6},{id:'yeso',cantidad:4},{id:'bicarbonato',cantidad:4},
+    ]
+  },
   'r-belgian': {
     nombre: 'Belgian Blonde Albahaca-Romero',
     abvEstimado: '6.6–6.9%',
     ibu: '22–28',
     tempServicio: '6–10 °C',
     maridaje: 'Ensaladas frescas, pollo a las hierbas, quesos suaves.',
-    descripcion: 'Belgian Blonde dorada y de carácter fresco. Notas suaves a caramelo y un cuerpo sedoso se combinan con albahaca y romero que le dan un toque herbal, aromático y muy refrescante. Seca, fácil de beber y con la fuerza justa del estilo belga: ideal para acompañar ensaladas, pollo a las hierbas o quesos suaves.',
+    descripcion: 'Cerveza artesanal de carácter único, elaborada con una suave base de malta Pale Ale y trigo, con maltas especiales Viking Malt (Red Malt, Caramel Malt 50), enriquecida con avena para una textura sedosa. Su perfil aromático incorpora sutiles notas a caramelo, equilibradas a la perfección con infusiones frescas de albahaca y romero que aportan un toque herbal, fresco y refrescante. Azúcar de caña/Candi Sugar Clear al hervor sube el ABV a rango de estilo belga sin más cuerpo.',
     ingredientes: [
       {id:'pale-ale',cantidad:900},{id:'wheat',cantidad:200},{id:'viking-red-malt',cantidad:100},
       {id:'viking-caramel-malt-50',cantidad:50},{id:'avena',cantidad:50},
@@ -405,6 +418,9 @@ const CATALOGO = {
   'cloruro-calcio':{nombre:'Cloruro de calcio (CaCl2)', unidad:' g'},
   'yeso':{nombre:'Sulfato de calcio (yeso)', unidad:' g'},
   'bicarbonato':{nombre:'Bicarbonato de sodio', unidad:' g'},
+  'flaked-barley':{nombre:'Cebada en hojuelas', gluten:'cebada', unidad:' g'},
+  'us-golding':{nombre:'Lúpulo US Golding', unidad:' g'},
+  'fermoale-ay3':{nombre:'Levadura FermoAle AY3', unidad:' paq'},
 };
 
 const ESTADOS = {
